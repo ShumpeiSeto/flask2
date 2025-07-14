@@ -123,14 +123,28 @@ def index():
 
 @app.route("/my_task")
 def my_task():
-    all_tasks = Tasks.query.order_by(Tasks.deadline)
-    nc_tasks = all_tasks.filter(Tasks.user_id == current_user.id).filter(
-        Tasks.is_completed == 0
-    )
-    c_tasks = all_tasks.filter(Tasks.user_id == current_user.id).filter(
-        Tasks.is_completed == 1
-    )
-    return render_template("testtemp/my_task.html", nc_tasks=nc_tasks, c_tasks=c_tasks)
+    print(current_user)
+    if current_user.is_authenticated:
+        all_tasks = Tasks.query.order_by(Tasks.deadline)
+        # 全タスクの内未完タスクの表示
+        nc_tasks = all_tasks.filter(Tasks.user_id == current_user.id).filter(
+            Tasks.is_completed == 0
+        )
+        c_tasks = all_tasks.filter(Tasks.user_id == current_user.id).filter(
+            Tasks.is_completed == 1
+        )
+        return render_template("testtemp/my_task.html", nc_tasks=nc_tasks, c_tasks=c_tasks)
+    else:
+        all_tasks = Tasks.query.order_by(Tasks.deadline)
+        # 全タスクの内未完タスクの表示
+        nc_tasks = all_tasks.filter(Tasks.user_id == 0).filter(
+            Tasks.is_completed == 0
+        )
+        c_tasks = all_tasks.filter(Tasks.user_id == 0).filter(
+            Tasks.is_completed == 1
+        )
+        return render_template("testtemp/my_task.html", nc_tasks=nc_tasks, c_tasks=c_tasks)
+
 
 
 @app.route("/add_task", methods=["GET", "POST"])
@@ -143,7 +157,7 @@ def add_task():
         dead_time = request.form.get("dead_time")
         deadline = make_deadline(dead_date, dead_time)
         is_completed = False
-        user_id = current_user.id
+        user_id = current_user.id if current_user.is_authenticated else 0
         target_task = dict(
             title=title, deadline=deadline, is_completed=is_completed, user_id=user_id
         )
