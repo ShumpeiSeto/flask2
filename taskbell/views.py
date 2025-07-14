@@ -133,18 +133,18 @@ def my_task():
         c_tasks = all_tasks.filter(Tasks.user_id == current_user.id).filter(
             Tasks.is_completed == 1
         )
-        return render_template("testtemp/my_task.html", nc_tasks=nc_tasks, c_tasks=c_tasks)
     else:
-        all_tasks = Tasks.query.order_by(Tasks.deadline)
-        # 全タスクの内未完タスクの表示
-        nc_tasks = all_tasks.filter(Tasks.user_id == 0).filter(
-            Tasks.is_completed == 0
-        )
-        c_tasks = all_tasks.filter(Tasks.user_id == 0).filter(
-            Tasks.is_completed == 1
-        )
-        return render_template("testtemp/my_task.html", nc_tasks=nc_tasks, c_tasks=c_tasks)
-
+        all_tasks = session["tasks"]
+        nc_tasks = [x for x in all_tasks if x["is_completed"] == 0]
+        c_tasks = [x for x in all_tasks if x["is_completed"] == 1]
+    return render_template("testtemp/my_task.html", nc_tasks=nc_tasks, c_tasks=c_tasks)
+    # all_tasks = Tasks.query.order_by(Tasks.deadline)
+    # # 全タスクの内未完タスクの表示
+    # nc_tasks = all_tasks.filter(Tasks.user_id == 0).filter(Tasks.is_completed == 0)
+    # c_tasks = all_tasks.filter(Tasks.user_id == 0).filter(Tasks.is_completed == 1)
+    # return render_template(
+    #     "testtemp/my_task.html", nc_tasks=nc_tasks, c_tasks=c_tasks
+    # )
 
 
 @app.route("/add_task", methods=["GET", "POST"])
@@ -157,12 +157,37 @@ def add_task():
         dead_time = request.form.get("dead_time")
         deadline = make_deadline(dead_date, dead_time)
         is_completed = False
-        user_id = current_user.id if current_user.is_authenticated else 0
-        target_task = dict(
-            title=title, deadline=deadline, is_completed=is_completed, user_id=user_id
-        )
-        print(target_task)
-        insert(target_task)
+        if current_user.is_authenticated:
+            user_id = current_user.id
+            target_task = dict(
+                title=title,
+                deadline=deadline,
+                is_completed=is_completed,
+                user_id=user_id,
+            )
+            print(target_task)
+            insert(target_task)
+        else:
+            if "t_counts" in session:
+                current_t_counts = session["t_counts"] + 1
+                session["t_counts"] = current_t_counts
+            else:
+                session["t_counts"] = 1
+
+            if "tasks" not in session:
+                session["tasks"] = []
+            guest_task = dict(
+                task_id=session["t_counts"],
+                title=title,
+                deadline=deadline,
+                is_completed=is_completed,
+                created_time=datetime.datetime.now(),
+                updated_time=datetime.datetime.now(),
+            )
+            session["tasks"].append(guest_task)
+
+            # ゲストユーザーの場合はsessionにタスクを追加する
+
     return render_template("testtemp/new_task.html")
 
 
@@ -252,6 +277,12 @@ def login():
 def logout():
     logout_user()
     session.pop("_flashes", None)
+    return redirect("/")
+
+
+@app.route("/clear")
+def session_clear():
+    session.clear()
     return redirect("/")
 
 
