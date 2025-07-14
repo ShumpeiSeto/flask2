@@ -1,6 +1,47 @@
 {% extends 'testtemp/layout.html' %}
 {% block content %}
-<section class="edit_task">
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-8 border border-secondary border-1 rounded px-5 py-4">
+      <h1>タスクを編集</h1>
+      <p>編集後更新ボタンを押してください。</p>
+      <form method="post" class="add_task_form">
+        <div class="row mb-3">
+          <div class="col-5">
+              <label for="task_name">タスク名：</label>
+          </div>
+          <div class="col-7">
+              <input type="text" name="title" id="title" value="{{ task.title }}">
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-5">
+            <label for="dead_day">期限日：</label>
+          </div>
+          <div class="col-7">
+            <input type="date" name="dead_date" id="dead_date" value="{{ task.deadline.date() }}">
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-5">
+            <label for="dead_time">期限時間：</label>
+          </div>
+          <div class="col-7">
+            <input type="time" name="dead_time" id="dead_time" value="{{ task.deadline.time() }}">
+          </div>
+        </div>
+        <div class="buttons text-center">
+          <button type="submit" class="btn btn-primary mb-3">更新</button>
+          <p>
+          <a href="{{ url_for('my_task') }}"><button type="button" class="btn btn-danger">キャンセル</button></a>
+          </p>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+{# <section class="edit_task">
   <h1>タスクを編集</h1>
   <p>タスク編集しましょう</p>
   <form method="post" class="edit_task_form">
@@ -20,5 +61,5 @@
   </ul>
     <button type="submit" class="btn btn-success">更新</button>
   </form>
-</section>
+</section> #}
 {% endblock %}
