@@ -67,6 +67,13 @@ def update(task, update_info):
     print("更新処理がおわりました")
 
 
+def update_session(task, update_info):
+    # index = session["tasks"].index(task)
+    # del session["tasks"][index]
+    # session["tasks"].insert(index, update_info)
+    session["tasks"].append(update_info)
+
+
 def delete(task_id):
     with app.app_context():
         task = Tasks.query.filter(Tasks.task_id == task_id).first()
@@ -193,8 +200,11 @@ def add_task():
 
 @app.route("/edit_task/<int:task_id>", methods=["GET", "POST"])
 def edit_task(task_id):
-    task = Tasks.query.filter(Tasks.task_id == task_id).first()
-    print(task)
+    if current_user.is_authenticated:
+        task = Tasks.query.filter(Tasks.task_id == task_id).first()
+    else:
+        task = [x for x in session["tasks"] if x["task_id"] == task_id][0]
+
     if request.method == "GET":
         return render_template("testtemp/edit_task.html", task=task)
     elif request.method == "POST":
@@ -209,7 +219,14 @@ def edit_task(task_id):
             "dead_line": dead_line,
             "is_completed": is_completed,
         }
-        update(task, update_info)
+        if current_user.is_authenticated:
+            update(task, update_info)
+        else:
+            # update_session(task, update_info)
+            index = session["tasks"].index(task)
+            del session["tasks"][index]
+            # session["tasks"].insert(index, update_info)
+            session["tasks"].append(update_info)
     return redirect("/my_task")
 
 
